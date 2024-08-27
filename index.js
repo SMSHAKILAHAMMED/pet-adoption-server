@@ -12,7 +12,7 @@ const stripe = require('stripe')('sk_test_4eC39HqLyjWDarjtT1zdp7dc');
 // middleware
 app.use(cors({
   origin: [
-    "http://localhost:5173", 
+    "http://localhost:5173",
 
   ],
   credentials: true,
@@ -23,9 +23,6 @@ app.use(cors());
 app.use(express.json());
 
 // Log the important environment variables to ensure they are being loaded
-// console.log('Stripe Secret Key:', process.env.STRIPE_SECRET_KEY ? 'Loaded' : 'Not Loaded');
-// console.log('MongoDB User:', process.env.USER_DB);
-// console.log('MongoDB Password:', process.env.USER_PASS);
 
 const uri = "mongodb+srv://petAdoption-12:6VYweuBmytOS5jqg@cluster0.upxjo1h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
@@ -49,34 +46,27 @@ async function run() {
     const donationCampaignPets = client.db("adoptionDB").collection("donationCampaignPets");
     const BanUsersCollection = client.db("adoptionDB").collection("banUsers");
     const AdoptedrequestedDB = client.db("adoptionDB").collection("Adoptedrequested");
-    
 
-   //Payment api
+    // Route to create a Payment Intent
     app.post('/create-payment-intent', async (req, res) => {
       try {
-        const { donation } = req.body;
-        if (!donation) {
-          throw new Error('Donation amount is required');
-        }
-        
-        const amount = parseInt(donation * 100);
-        console.log('Amount:', amount);
-    
+        const { amount, currency } = req.body; // Receive amount and currency from client
+
+        // Create a Payment Intent with Stripe
         const paymentIntent = await stripe.paymentIntents.create({
-          amount: amount,
-          currency: 'usd',
-          payment_method_types: ['card'],
+          amount: amount, // Payment amount in cents (e.g., 1000 for $10)
+          currency: currency, // Payment currency (e.g., 'usd')
         });
-        // console.log('Payment Intent:', paymentIntent);
+
+        // Send Payment Intent client secret to client
         res.send({
           clientSecret: paymentIntent.client_secret,
         });
       } catch (error) {
-        console.error('Error creating payment intent:', error.message);
         res.status(500).send({ error: error.message });
       }
     });
-  
+
     // jwt related api
     app.post("/jwt", async (req, res) => {
       const user = req.body;
@@ -115,7 +105,7 @@ async function run() {
     };
     // Users releted api
 
-    app.get("/users", verifyToken,verifyAdmin,  async (req, res) => {
+    app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
@@ -137,7 +127,7 @@ async function run() {
     })
 
     // make admin
-    app.patch("/users/admin/:id",verifyToken, verifyAdmin, async (req, res) => {
+    app.patch("/users/admin/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
@@ -148,9 +138,9 @@ async function run() {
       const result = await userCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
-    
-// ban Users api
-    app.post("/users/ban", verifyToken,verifyAdmin, async (req, res) => {
+
+    // ban Users api
+    app.post("/users/ban", verifyToken, verifyAdmin, async (req, res) => {
       const banUser = req.body;
       const result = await BanUsersCollection.insertOne(banUser);
       res.send(result);
@@ -184,7 +174,7 @@ async function run() {
       const result = await PetListingData.find(query, options).toArray();
       res.send(result);
     });
-    app.get("/allCategory/admin", verifyToken,verifyAdmin, async (req, res) => {
+    app.get("/allCategory/admin", verifyToken, verifyAdmin, async (req, res) => {
       const result = await PetListingData.find().toArray();
       res.send(result);
     });
@@ -195,9 +185,9 @@ async function run() {
       const result = await PetListingData.findOne(query);
       res.send(result);
     });
-    app.delete("/allcategory/admin/delete/:id", verifyToken,verifyAdmin, async(req,res)=>{
+    app.delete("/allcategory/admin/delete/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const result = await PetListingData.deleteOne(query)
       res.send(result)
     })
@@ -264,7 +254,7 @@ async function run() {
     app.patch("/updateMyaddedPets/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const data = req.body;
-      console.log(id,'id')
+      console.log(id, 'id')
       const query = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
@@ -302,7 +292,7 @@ async function run() {
       res.send(result);
     });
     // Admin change status 
-    app.patch("/AdminChangeStatusByAdopted/:id", verifyToken,verifyAdmin, async (req, res) => {
+    app.patch("/AdminChangeStatusByAdopted/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const updateDoc = {
@@ -313,7 +303,7 @@ async function run() {
       const result = await PetListingData.updateOne(query, updateDoc);
       res.send(result);
     });
-    app.patch("/AdminChangeStatusByNotAdopted/:id", verifyToken,verifyAdmin, async (req, res) => {
+    app.patch("/AdminChangeStatusByNotAdopted/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const updateDoc = {
@@ -333,11 +323,11 @@ async function run() {
       res.send(result);
     });
     // Campaign releted api
-    app.get("/campaignAllPeats",  async (req, res) => {
+    app.get("/campaignAllPeats", async (req, res) => {
       const result = await donationCampaignPets.find().sort({ date: -1 }).toArray();
       res.send(result);
     });
-    app.get("/campaignAllPeats/admin", verifyToken,verifyAdmin, async (req, res) => {
+    app.get("/campaignAllPeats/admin", verifyToken, verifyAdmin, async (req, res) => {
       const result = await donationCampaignPets.find().toArray();
       res.send(result);
     });
@@ -352,7 +342,7 @@ async function run() {
       const result = await donationCampaignPets.updateOne(query, updateDoc);
       res.send(result);
     });
-    app.patch("/Campaign/Unpause/:id", verifyToken,verifyAdmin, async (req, res) => {
+    app.patch("/Campaign/Unpause/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const updateDoc = {
@@ -387,9 +377,9 @@ async function run() {
       const result = await donationCampaignPets.find(query).toArray();
       res.send(result);
     });
-    app.get("/myDonatePets/:email", async(req,res)=>{
+    app.get("/myDonatePets/:email", async (req, res) => {
       const email = req.params.email;
-      const query = {'donators.email':email}
+      const query = { 'donators.email': email }
       const result = await donationCampaignPets.find(query).toArray()
       res.send(result)
     })
@@ -414,40 +404,40 @@ async function run() {
       res.send(result);
     });
     // Payment releted api
-    app.patch('/campaigndonateUpdate/:id', async(req,res)=>{
+    app.patch('/campaigndonateUpdate/:id', async (req, res) => {
       const id = req.params.id;
       const donateDetails = req.body;
       console.log(donateDetails);
-      const query = {_id : new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const options = { upsert: true };
       const donationAmount = donateDetails.amount / 100;
       const updateDoc = {
         $inc: {
-            donatedAmount:donationAmount
+          donatedAmount: donationAmount
         },
         $push: {
-            donators: {
-                email: donateDetails.donate_person_email,
-                name: donateDetails.donate_person_name,
-                donate:donateDetails.danateMoney
-            }
+          donators: {
+            email: donateDetails.donate_person_email,
+            name: donateDetails.donate_person_name,
+            donate: donateDetails.danateMoney
+          }
         }
-    };
-    const result = await donationCampaignPets.updateOne(query, updateDoc, options)
+      };
+      const result = await donationCampaignPets.updateOne(query, updateDoc, options)
     })
-    app.patch('/refund/:id/:email', async (req,res)=>{
+    app.patch('/refund/:id/:email', async (req, res) => {
       const id = req.params.id;
       const email = req.params.email;
       const refundAmount = req.body.amount;
       console.log('kocu', id, email, refundAmount);
 
       const query = { _id: new ObjectId(id) };
-    
+
       const updateDoc = {
-        $inc: { donatedAmount: -refundAmount }, 
+        $inc: { donatedAmount: -refundAmount },
         $pull: { donators: { email: email } }
       };
-      const result = await donationCampaignPets.updateOne(query,updateDoc)
+      const result = await donationCampaignPets.updateOne(query, updateDoc)
       res.send(result)
     })
 
