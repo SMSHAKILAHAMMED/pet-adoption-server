@@ -50,25 +50,32 @@ async function run() {
     const BanUsersCollection = client.db("adoptionDB").collection("banUsers");
     const AdoptedrequestedDB = client.db("adoptionDB").collection("Adoptedrequested");
     
-   // Route to create a Payment Intent
-app.post('/create-payment-intent', async (req, res) => {
-  try {
-    const { amount, currency } = req.body; // Receive amount and currency from client
 
-    // Create a Payment Intent with Stripe
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount, // Payment amount in cents (e.g., 1000 for $10)
-      currency: currency, // Payment currency (e.g., 'usd')
+   //Payment api
+    app.post('/create-payment-intent', async (req, res) => {
+      try {
+        const { donation } = req.body;
+        if (!donation) {
+          throw new Error('Donation amount is required');
+        }
+        
+        const amount = parseInt(donation * 100);
+        console.log('Amount:', amount);
+    
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: 'usd',
+          payment_method_types: ['card'],
+        });
+        // console.log('Payment Intent:', paymentIntent);
+        res.send({
+          clientSecret: paymentIntent.client_secret,
+        });
+      } catch (error) {
+        console.error('Error creating payment intent:', error.message);
+        res.status(500).send({ error: error.message });
+      }
     });
-
-    // Send Payment Intent client secret to client
-    res.send({
-      clientSecret: paymentIntent.client_secret,
-    });
-  } catch (error) {
-    res.status(500).send({ error: error.message });
-  }
-});
   
     // jwt related api
     app.post("/jwt", async (req, res) => {
