@@ -22,7 +22,6 @@ app.use(cors({
 
 }));
 
-// app.use(cors());
 app.use(express.json());
 
 // Log the important environment variables to ensure they are being loaded
