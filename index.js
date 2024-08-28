@@ -13,18 +13,22 @@ const stripe = require('stripe')('sk_test_4eC39HqLyjWDarjtT1zdp7dc');
 app.use(cors({
   origin: [
     "http://localhost:5173",
+    "http://localhost:5174",
+    "https://pet-adoption-ba336.web.app",
+    "https://pet-adoption-ba336.firebaseapp.com"
 
   ],
   credentials: true,
 
 }));
 
-app.use(cors());
+// app.use(cors());
 app.use(express.json());
 
 // Log the important environment variables to ensure they are being loaded
-
-const uri = "mongodb+srv://petAdoption-12:6VYweuBmytOS5jqg@cluster0.upxjo1h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+// console.log(process.env.USER_DB)
+// console.log(process.env.USER_PASS)
+const uri = `mongodb+srv://${process.env.USER_DB}:${process.env.USER_PASS}@cluster0.upxjo1h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
